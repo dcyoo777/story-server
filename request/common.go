@@ -3,6 +3,7 @@ package request
 import (
 	"example/mysql"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 )
 
 type CommonRequests struct {
@@ -19,39 +20,33 @@ func (c CommonRequests) connectDB() mysql.Mysql {
 	}
 }
 
-func (c CommonRequests) GetAll() (any, error) {
-	//
-	//db := connectDB()
-	//
-	//var items []service.Story
-	//
-	//result, err := db.GetAll("story", &items)
-	//
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//fmt.Printf("%+v\n", result)
-
-	//return result, nil
-
-	return nil, nil
-}
-
-func (c CommonRequests) GetOne(id any) (any, error) {
+func (c CommonRequests) GetAll() (*sqlx.Rows, error) {
 
 	db := c.connectDB()
 
-	//item := &service.Story{}
-	//item :=
+	//var items []service.Story
 
-	result, err := db.GetOne(id)
+	result, err := db.GetAll()
 
 	if err != nil {
 		return nil, err
 	}
 
 	fmt.Printf("%+v\n", result)
+
+	return result, nil
+
+}
+
+func (c CommonRequests) GetOne(id any) (*sqlx.Rows, error) {
+
+	db := c.connectDB()
+
+	result, err := db.GetOne(id)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return result, nil
 }

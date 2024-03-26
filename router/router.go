@@ -2,7 +2,6 @@ package router
 
 import (
 	"example/service"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -19,25 +18,20 @@ func SetupRouter() *gin.Engine {
 		c.String(http.StatusOK, "pong")
 	})
 
-	// GetAll user value
-	r.GET("/user/:name", func(c *gin.Context) {
-		user := c.Params.ByName("name")
-		value, ok := db[user]
-		if ok {
-			c.JSON(http.StatusOK, gin.H{"user": user, "value": value})
+	// GetAll Story
+	r.GET("/story", func(c *gin.Context) {
+		items, err := service.StoryCommonReq.GetAll()
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{})
 		} else {
-			c.JSON(http.StatusOK, gin.H{"user": user, "status": "no value"})
+			c.JSON(http.StatusOK, gin.H{"result": items})
 		}
 	})
 
 	// GetOne Story
 	r.GET("/story/:story_id", func(c *gin.Context) {
 		storyId := c.Params.ByName("story_id")
-		//var result service.Story
-		//var err any
-		item, err := service.StoryCommon.GetOne(storyId)
-		fmt.Printf("%s\n", storyId)
-		//result = service.Story{}
+		item, err := service.StoryCommonReq.GetOne(storyId)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{})
 		} else {

@@ -53,35 +53,7 @@ func (mysql Mysql) Tx(query string) (bool, error) {
 	return true, nil
 }
 
-func (mysql Mysql) GetAll(table string, items *any) ([]any, error) {
-
-	//db, err := sqlx.Open("mysql", mysql.DatasourceName)
-	//
-	//if err != nil {
-	//	log.Fatalln(err)
-	//}
-	//
-	//rows, err2 := db.Queryx(fmt.Sprintf("SELECT story_id, title, content, created_at, updated_at FROM %s", table))
-	////var result []any
-	//for rows.Next() {
-	//	var p struct{}
-	//	scanErr := rows.StructScan(&p)
-	//	if scanErr != nil {
-	//		log.Fatalln(scanErr)
-	//	}
-	//	items = append(result, p)
-	//}
-	//
-	//if err2 != nil {
-	//	return nil, err2
-	//}
-	//
-	//return result, nil
-
-	return nil, nil
-}
-
-func (mysql Mysql) GetOne(id any) (any, error) {
+func (mysql Mysql) GetAll() (*sqlx.Rows, error) {
 
 	db, err := sqlx.Open("mysql", mysql.DatasourceName)
 
@@ -89,16 +61,41 @@ func (mysql Mysql) GetOne(id any) (any, error) {
 		log.Fatalln(err)
 	}
 
-	var item any
+	rows, err2 := db.Queryx(fmt.Sprintf("SELECT * FROM %s", mysql.Table))
 
-	err2 := db.Get(item, fmt.Sprintf("SELECT * FROM %s WHERE %s = %d", mysql.Table, mysql.PrimaryKey, id))
-
-	if err != nil {
-		fmt.Println("Failed to get user:", err)
-		return false, err2
+	if err2 != nil {
+		return nil, err2
 	}
 
-	return item, nil
+	return rows, nil
+}
+
+func (mysql Mysql) GetOne(id any) (*sqlx.Rows, error) {
+
+	db, err := sqlx.Open("mysql", mysql.DatasourceName)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	//var item any
+
+	rows, err2 := db.Queryx(fmt.Sprintf("SELECT * FROM %s WHERE %s = %s", mysql.Table, mysql.PrimaryKey, id))
+
+	if err2 != nil {
+		return nil, err2
+	}
+
+	return rows, nil
+
+	//err2 := db.Get(item, fmt.Sprintf("SELECT * FROM %s WHERE %s = %d", mysql.Table, mysql.PrimaryKey, id))
+	//
+	//if err != nil {
+	//	fmt.Println("Failed to get user:", err)
+	//	return false, err2
+	//}
+	//
+	//return item, nil
 }
 
 func (mysql Mysql) Insert(item interface{}) (bool, error) {
