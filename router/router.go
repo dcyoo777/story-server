@@ -2,8 +2,11 @@ package router
 
 import (
 	"example/service"
+	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 )
 
 var db = make(map[string]string)
@@ -13,6 +16,15 @@ func SetupRouter() *gin.Engine {
 	// gin.DisableConsoleColor()
 	r := gin.Default()
 
+	r.Use(cors.New(
+		cors.Config{
+			AllowOrigins:     []string{"http://localhost:3000", "*"},
+			AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+			AllowHeaders:     []string{"Origin", "custom-header"},
+			AllowCredentials: true,
+			MaxAge:           1 * time.Minute,
+		}))
+
 	// Ping test
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "pong")
@@ -21,6 +33,7 @@ func SetupRouter() *gin.Engine {
 	// GetAll Story
 	r.GET("/story", func(c *gin.Context) {
 		items, err := service.StoryCommonReq.GetAll()
+		fmt.Printf("%v\n", items)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{})
 		} else {
@@ -32,6 +45,50 @@ func SetupRouter() *gin.Engine {
 	r.GET("/story/:story_id", func(c *gin.Context) {
 		storyId := c.Params.ByName("story_id")
 		item, err := service.StoryCommonReq.GetOne(storyId)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{})
+		} else {
+			c.JSON(http.StatusOK, gin.H{"result": item})
+		}
+	})
+
+	r.POST("/story", func(c *gin.Context) {
+		var newStory service.Story
+		if err := c.BindJSON(&newStory); err != nil {
+			return
+		}
+
+		item, err := service.StoryCommonReq.Create(newStory)
+
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{})
+		} else {
+			c.JSON(http.StatusOK, gin.H{"result": item})
+		}
+	})
+
+	r.PUT("/story/:story_id", func(c *gin.Context) {
+		var updatedStory service.Story
+
+		storyId := c.Params.ByName("story_id")
+		if err := c.BindJSON(&updatedStory); err != nil {
+			return
+		}
+
+		item, err := service.StoryCommonReq.Update(storyId, updatedStory)
+
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{})
+		} else {
+			c.JSON(http.StatusOK, gin.H{"result": item})
+		}
+	})
+
+	r.DELETE("/story/:story_id", func(c *gin.Context) {
+		storyId := c.Params.ByName("story_id")
+
+		item, err := service.StoryCommonReq.Delete(storyId)
+
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{})
 		} else {
@@ -76,9 +133,3 @@ func SetupRouter() *gin.Engine {
 
 	return r
 }
-
-//func main() {
-//	r := setupRouter()
-//	// Listen and Server in 0.0.0.0:8080
-//	r.Run(":8080")
-//}

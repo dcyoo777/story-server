@@ -71,10 +71,4 @@ func (c StoryCommonRequests) GetOne(storyId any) (Story, error) {
 	return result, nil
 }
 
-var StoryCommonReq = StoryCommonRequests{
-	request.CommonRequests{
-		Table:          "story",
-		PrimaryKey:     "story_id",
-		DatasourceName: "root:1234@tcp(127.0.0.1:3306)/story",
-	},
-}
+var StoryCommonReq StoryCommonRequests
