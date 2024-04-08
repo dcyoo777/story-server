@@ -34,5 +34,5 @@ func main() {
 	}
 
 	r := router.SetupRouter()
-	r.Run(":80")
+	r.Run(":" + os.Getenv("PORT"))
 }

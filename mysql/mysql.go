@@ -53,6 +53,25 @@ func (mysql Mysql) Tx(query string) (bool, error) {
 	return true, nil
 }
 
+func (mysql Mysql) Select(result any, options any) (*sqlx.Rows, error) {
+
+	db, err := sqlx.Open("mysql", mysql.DatasourceName)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	sql, _, _ := goqu.From(mysql.Table).Where().ToSQL()
+
+	rows, err2 := db.Queryx(sql)
+
+	if err2 != nil {
+		return nil, err2
+	}
+
+	return rows, nil
+}
+
 func (mysql Mysql) GetAll() (*sqlx.Rows, error) {
 
 	db, err := sqlx.Open("mysql", mysql.DatasourceName)
@@ -78,8 +97,6 @@ func (mysql Mysql) GetOne(id any) (*sqlx.Rows, error) {
 		log.Fatalln(err)
 	}
 
-	//var item any
-
 	rows, err2 := db.Queryx(fmt.Sprintf("SELECT * FROM %s WHERE %s = %s", mysql.Table, mysql.PrimaryKey, id))
 
 	if err2 != nil {
@@ -87,15 +104,6 @@ func (mysql Mysql) GetOne(id any) (*sqlx.Rows, error) {
 	}
 
 	return rows, nil
-
-	//err2 := db.Get(item, fmt.Sprintf("SELECT * FROM %s WHERE %s = %d", mysql.Table, mysql.PrimaryKey, id))
-	//
-	//if err != nil {
-	//	fmt.Println("Failed to get user:", err)
-	//	return false, err2
-	//}
-	//
-	//return item, nil
 }
 
 func (mysql Mysql) Insert(item interface{}) (bool, error) {

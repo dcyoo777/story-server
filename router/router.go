@@ -18,9 +18,9 @@ func SetupRouter() *gin.Engine {
 
 	r.Use(cors.New(
 		cors.Config{
-			AllowOrigins:     []string{"http://localhost:3000", "*"},
-			AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
-			AllowHeaders:     []string{"Origin", "custom-header"},
+			AllowOrigins:     []string{"*"},
+			AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowHeaders:     []string{"Origin", "custom-header", "content-type"},
 			AllowCredentials: true,
 			MaxAge:           1 * time.Minute,
 		}))
@@ -58,7 +58,7 @@ func SetupRouter() *gin.Engine {
 			return
 		}
 
-		item, err := service.StoryCommonReq.Create(newStory)
+		item, err := service.StoryCommonReq.Create(newStory.ToDB())
 
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{})
