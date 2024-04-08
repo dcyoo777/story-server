@@ -6,6 +6,14 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type CommonRequestInterface interface {
+	GetAll() (any, error)
+	GetOne(any) (any, error)
+	Create(any) (any, error)
+	Update(any, any) (any, error)
+	Delete(any) (any, error)
+}
+
 type CommonRequests struct {
 	Table          string
 	PrimaryKey     string
@@ -23,8 +31,6 @@ func (c CommonRequests) connectDB() mysql.Mysql {
 func (c CommonRequests) GetAll() (*sqlx.Rows, error) {
 
 	db := c.connectDB()
-
-	//var items []service.Story
 
 	result, err := db.GetAll()
 

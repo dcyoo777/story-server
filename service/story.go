@@ -38,7 +38,7 @@ func CastToStory(item *sqlx.Rows) Story {
 	return p
 }
 
-func (c StoryCommonRequests) GetAll() ([]Story, error) {
+func (c StoryCommonRequests) GetAll() (any, error) {
 
 	var result []Story
 
@@ -55,7 +55,7 @@ func (c StoryCommonRequests) GetAll() ([]Story, error) {
 	return result, nil
 }
 
-func (c StoryCommonRequests) GetOne(storyId any) (Story, error) {
+func (c StoryCommonRequests) GetOne(storyId any) (any, error) {
 
 	var result Story
 

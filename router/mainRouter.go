@@ -2,7 +2,6 @@ package router
 
 import (
 	"example/service"
-	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -30,71 +29,19 @@ func SetupRouter() *gin.Engine {
 		c.String(http.StatusOK, "pong")
 	})
 
-	// GetAll Story
-	r.GET("/story", func(c *gin.Context) {
-		items, err := service.StoryCommonReq.GetAll()
-		fmt.Printf("%v\n", items)
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{})
-		} else {
-			c.JSON(http.StatusOK, gin.H{"result": items})
-		}
-	})
+	storyRouter := SubRouter{
+		Path:       "story",
+		PrimaryKey: "story_id",
+	}
 
-	// GetOne Story
-	r.GET("/story/:story_id", func(c *gin.Context) {
-		storyId := c.Params.ByName("story_id")
-		item, err := service.StoryCommonReq.GetOne(storyId)
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{})
-		} else {
-			c.JSON(http.StatusOK, gin.H{"result": item})
-		}
-	})
+	storyRouter.useCommonRequests(r, service.StoryCommonReq)
 
-	r.POST("/story", func(c *gin.Context) {
-		var newStory service.Story
-		if err := c.BindJSON(&newStory); err != nil {
-			return
-		}
+	userRouter := SubRouter{
+		Path:       "user",
+		PrimaryKey: "user_id",
+	}
 
-		item, err := service.StoryCommonReq.Create(newStory.ToDB())
-
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{})
-		} else {
-			c.JSON(http.StatusOK, gin.H{"result": item})
-		}
-	})
-
-	r.PUT("/story/:story_id", func(c *gin.Context) {
-		var updatedStory service.Story
-
-		storyId := c.Params.ByName("story_id")
-		if err := c.BindJSON(&updatedStory); err != nil {
-			return
-		}
-
-		item, err := service.StoryCommonReq.Update(storyId, updatedStory)
-
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{})
-		} else {
-			c.JSON(http.StatusOK, gin.H{"result": item})
-		}
-	})
-
-	r.DELETE("/story/:story_id", func(c *gin.Context) {
-		storyId := c.Params.ByName("story_id")
-
-		item, err := service.StoryCommonReq.Delete(storyId)
-
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{})
-		} else {
-			c.JSON(http.StatusOK, gin.H{"result": item})
-		}
-	})
+	userRouter.useCommonRequests(r, service.UserCommonReq)
 
 	// Authorized group (uses gin.BasicAuth() middleware)
 	// Same than:
