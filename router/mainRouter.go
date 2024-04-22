@@ -1,7 +1,9 @@
 package router
 
 import (
-	"example/service"
+	"example/request"
+	"example/service/appUser"
+	"example/service/story"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -10,7 +12,7 @@ import (
 
 var db = make(map[string]string)
 
-func SetupRouter() *gin.Engine {
+func SetupRouter(dataSourceName string) *gin.Engine {
 	// Disable Console Color
 	// gin.DisableConsoleColor()
 	r := gin.Default()
@@ -29,19 +31,25 @@ func SetupRouter() *gin.Engine {
 		c.String(http.StatusOK, "pong")
 	})
 
-	storyRouter := SubRouter{
-		Path:       "story",
-		PrimaryKey: "story_id",
+	storyRouter := story.CommonRequests{
+		CommonRequests: request.CommonRequests{
+			Name:           "story",
+			PrimaryKey:     "story_id",
+			DatasourceName: dataSourceName,
+		},
 	}
 
-	storyRouter.useCommonRequests(r, service.StoryCommonReq)
+	UseSubRouter(r, storyRouter, story.MakeQuery)
 
-	userRouter := SubRouter{
-		Path:       "user",
-		PrimaryKey: "user_id",
+	userRouter := appUser.CommonRequests{
+		CommonRequests: request.CommonRequests{
+			Name:           "appUser",
+			PrimaryKey:     "user_id",
+			DatasourceName: dataSourceName,
+		},
 	}
 
-	userRouter.useCommonRequests(r, service.UserCommonReq)
+	UseSubRouter(r, userRouter, appUser.MakeQuery)
 
 	// Authorized group (uses gin.BasicAuth() middleware)
 	// Same than:
@@ -51,8 +59,8 @@ func SetupRouter() *gin.Engine {
 	//	  "manu": "123",
 	//}))
 	authorized := r.Group("/", gin.BasicAuth(gin.Accounts{
-		"foo":  "bar", // user:foo password:bar
-		"manu": "123", // user:manu password:123
+		"foo":  "bar", // appUser:foo password:bar
+		"manu": "123", // appUser:manu password:123
 	}))
 
 	/* main curl for /admin with basicauth header

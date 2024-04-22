@@ -3,6 +3,7 @@ package mysql
 import (
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
+	"github.com/doug-martin/goqu/v9/exp"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"log"
@@ -14,7 +15,7 @@ func removeDoubleQuote(str string) string {
 }
 
 type Mysql struct {
-	Table          string
+	Name           string
 	PrimaryKey     string
 	DatasourceName string
 }
@@ -53,7 +54,7 @@ func (mysql Mysql) Tx(query string) (bool, error) {
 	return true, nil
 }
 
-func (mysql Mysql) Select(result any, options any) (*sqlx.Rows, error) {
+func (mysql Mysql) Select(options ...exp.Expression) (*sqlx.Rows, error) {
 
 	db, err := sqlx.Open("mysql", mysql.DatasourceName)
 
@@ -61,9 +62,13 @@ func (mysql Mysql) Select(result any, options any) (*sqlx.Rows, error) {
 		log.Fatalln(err)
 	}
 
-	sql, _, _ := goqu.From(mysql.Table).Where().ToSQL()
+	sql, _, _ := goqu.From(mysql.Name).Where(
+		options...,
+	).ToSQL()
 
-	rows, err2 := db.Queryx(sql)
+	rows, err2 := db.Queryx(strings.ReplaceAll(sql, "\"", ""))
+
+	println("%+v", rows)
 
 	if err2 != nil {
 		return nil, err2
@@ -80,7 +85,7 @@ func (mysql Mysql) GetAll() (*sqlx.Rows, error) {
 		log.Fatalln(err)
 	}
 
-	rows, err2 := db.Queryx(fmt.Sprintf("SELECT * FROM %s", mysql.Table))
+	rows, err2 := db.Queryx(fmt.Sprintf("SELECT * FROM %s", mysql.Name))
 
 	if err2 != nil {
 		return nil, err2
@@ -97,7 +102,7 @@ func (mysql Mysql) GetOne(id any) (*sqlx.Rows, error) {
 		log.Fatalln(err)
 	}
 
-	rows, err2 := db.Queryx(fmt.Sprintf("SELECT * FROM %s WHERE %s = %s", mysql.Table, mysql.PrimaryKey, id))
+	rows, err2 := db.Queryx(fmt.Sprintf("SELECT * FROM %s WHERE %s = %s", mysql.Name, mysql.PrimaryKey, id))
 
 	if err2 != nil {
 		return nil, err2
@@ -108,7 +113,7 @@ func (mysql Mysql) GetOne(id any) (*sqlx.Rows, error) {
 
 func (mysql Mysql) Insert(item interface{}) (bool, error) {
 
-	query, _, _ := goqu.Insert(mysql.Table).
+	query, _, _ := goqu.Insert(mysql.Name).
 		Rows(item).
 		ToSQL()
 
@@ -118,7 +123,7 @@ func (mysql Mysql) Insert(item interface{}) (bool, error) {
 
 func (mysql Mysql) Update(item interface{}, id any) (bool, error) {
 
-	query, _, _ := goqu.Update(mysql.Table).
+	query, _, _ := goqu.Update(mysql.Name).
 		Set(item).
 		Where(goqu.Ex{
 			mysql.PrimaryKey: id,
@@ -130,7 +135,7 @@ func (mysql Mysql) Update(item interface{}, id any) (bool, error) {
 
 func (mysql Mysql) Delete(id any) (bool, error) {
 
-	query, _, _ := goqu.Delete(mysql.Table).
+	query, _, _ := goqu.Delete(mysql.Name).
 		Where(goqu.Ex{
 			mysql.PrimaryKey: id,
 		}).ToSQL()

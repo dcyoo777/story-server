@@ -2,22 +2,21 @@ package router
 
 import (
 	"example/request"
+	"example/service"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-type SubRouter struct {
-	Path       string
-	PrimaryKey string
-}
+func UseSubRouter(r *gin.Engine, commonReq request.CommonRequestInterface, parseSelectQuery service.MakeQuery) {
 
-func (subRouter SubRouter) useCommonRequests(r *gin.Engine, commonReq request.CommonRequestInterface) {
-	// GetAll Story
 	r.GET(
-		fmt.Sprintf("/%s", subRouter.Path),
+		fmt.Sprintf("/%s", commonReq.GetName()),
 		func(c *gin.Context) {
-			items, err := commonReq.GetAll()
+
+			items, err := commonReq.Select(parseSelectQuery(c)...)
+
+			fmt.Printf("ITEMS : %+v\n", items)
 			if err != nil {
 				c.JSON(http.StatusNotFound, gin.H{})
 			} else {
@@ -26,11 +25,10 @@ func (subRouter SubRouter) useCommonRequests(r *gin.Engine, commonReq request.Co
 		},
 	)
 
-	// GetOne Story
 	r.GET(
-		fmt.Sprintf("/%s/:%s", subRouter.Path, subRouter.PrimaryKey),
+		fmt.Sprintf("/%s/:%s", commonReq.GetName(), commonReq.GetPrimaryKey()),
 		func(c *gin.Context) {
-			pk := c.Params.ByName(subRouter.PrimaryKey)
+			pk := c.Params.ByName(commonReq.GetPrimaryKey())
 			item, err := commonReq.GetOne(pk)
 			if err != nil {
 				c.JSON(http.StatusNotFound, gin.H{})
@@ -41,9 +39,8 @@ func (subRouter SubRouter) useCommonRequests(r *gin.Engine, commonReq request.Co
 	)
 
 	r.POST(
-		fmt.Sprintf("/%s", subRouter.Path),
+		fmt.Sprintf("/%s", commonReq.GetName()),
 		func(c *gin.Context) {
-			//var newStory service.Story
 			var newItem interface{}
 			if err := c.BindJSON(&newItem); err != nil {
 				return
@@ -60,15 +57,16 @@ func (subRouter SubRouter) useCommonRequests(r *gin.Engine, commonReq request.Co
 	)
 
 	r.PUT(
-		fmt.Sprintf("/%s/:%s", subRouter.Path, subRouter.PrimaryKey),
+		fmt.Sprintf("/%s/:%s", commonReq.GetName(), commonReq.GetPrimaryKey()),
 		func(c *gin.Context) {
-			//var updatedStory service.Story
 			var updatedItem interface{}
 
-			pk := c.Params.ByName(subRouter.PrimaryKey)
+			pk := c.Params.ByName(commonReq.GetPrimaryKey())
 			if err := c.BindJSON(&updatedItem); err != nil {
 				return
 			}
+
+			fmt.Printf("%v %+v\n", pk, updatedItem)
 
 			item, err := commonReq.Update(pk, updatedItem)
 
@@ -81,9 +79,9 @@ func (subRouter SubRouter) useCommonRequests(r *gin.Engine, commonReq request.Co
 	)
 
 	r.DELETE(
-		fmt.Sprintf("/%s/:%s", subRouter.Path, subRouter.PrimaryKey),
+		fmt.Sprintf("/%s/:%s", commonReq.GetName(), commonReq.GetPrimaryKey()),
 		func(c *gin.Context) {
-			pk := c.Params.ByName(subRouter.PrimaryKey)
+			pk := c.Params.ByName(commonReq.GetPrimaryKey())
 
 			item, err := commonReq.Delete(pk)
 
