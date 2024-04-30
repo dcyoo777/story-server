@@ -3,6 +3,7 @@ package request
 import (
 	"example/mysql"
 	"github.com/doug-martin/goqu/v9/exp"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -10,10 +11,10 @@ type CommonRequestInterface interface {
 	GetName() string
 	GetPrimaryKey() string
 	Select(...exp.Expression) (any, error)
-	GetOne(any) (any, error)
+	GetOne(uuid.UUID) (any, error)
 	Create(any) (any, error)
-	Update(any, any) (any, error)
-	Delete(any) (any, error)
+	Update(uuid.UUID, any) (any, error)
+	Delete(uuid.UUID) (any, error)
 }
 
 type CommonRequests struct {
@@ -51,7 +52,7 @@ func (c CommonRequests) Select(options ...exp.Expression) (*sqlx.Rows, error) {
 
 }
 
-func (c CommonRequests) GetOne(id any) (*sqlx.Rows, error) {
+func (c CommonRequests) GetOne(id uuid.UUID) (*sqlx.Rows, error) {
 
 	db := c.connectDB()
 
@@ -77,7 +78,7 @@ func (c CommonRequests) Create(item interface{}) (any, error) {
 	return result, nil
 }
 
-func (c CommonRequests) Update(id any, item interface{}) (any, error) {
+func (c CommonRequests) Update(id uuid.UUID, item interface{}) (any, error) {
 
 	db := c.connectDB()
 
@@ -90,7 +91,7 @@ func (c CommonRequests) Update(id any, item interface{}) (any, error) {
 	return result, nil
 }
 
-func (c CommonRequests) Delete(id any) (any, error) {
+func (c CommonRequests) Delete(id uuid.UUID) (any, error) {
 
 	db := c.connectDB()
 

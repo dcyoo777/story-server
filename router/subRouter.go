@@ -5,6 +5,7 @@ import (
 	"example/service"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"net/http"
 )
 
@@ -28,8 +29,12 @@ func UseSubRouter(r *gin.Engine, commonReq request.CommonRequestInterface, parse
 	r.GET(
 		fmt.Sprintf("/%s/:%s", commonReq.GetName(), commonReq.GetPrimaryKey()),
 		func(c *gin.Context) {
-			pk := c.Params.ByName(commonReq.GetPrimaryKey())
-			item, err := commonReq.GetOne(pk)
+			id, e1 := uuid.Parse(c.Params.ByName(commonReq.GetPrimaryKey()))
+			if e1 != nil {
+				c.JSON(http.StatusNotFound, gin.H{})
+				return
+			}
+			item, err := commonReq.GetOne(id)
 			if err != nil {
 				c.JSON(http.StatusNotFound, gin.H{})
 			} else {
@@ -61,14 +66,20 @@ func UseSubRouter(r *gin.Engine, commonReq request.CommonRequestInterface, parse
 		func(c *gin.Context) {
 			var updatedItem interface{}
 
-			pk := c.Params.ByName(commonReq.GetPrimaryKey())
-			if err := c.BindJSON(&updatedItem); err != nil {
+			id, e1 := uuid.Parse(c.Params.ByName(commonReq.GetPrimaryKey()))
+			if e1 != nil {
+				c.JSON(http.StatusNotFound, gin.H{})
 				return
 			}
 
-			fmt.Printf("%v %+v\n", pk, updatedItem)
+			if err := c.BindJSON(&updatedItem); err != nil {
+				c.JSON(http.StatusNotFound, gin.H{})
+				return
+			}
 
-			item, err := commonReq.Update(pk, updatedItem)
+			fmt.Printf("%v %+v\n", id, updatedItem)
+
+			item, err := commonReq.Update(id, updatedItem)
 
 			if err != nil {
 				c.JSON(http.StatusNotFound, gin.H{})
@@ -81,9 +92,13 @@ func UseSubRouter(r *gin.Engine, commonReq request.CommonRequestInterface, parse
 	r.DELETE(
 		fmt.Sprintf("/%s/:%s", commonReq.GetName(), commonReq.GetPrimaryKey()),
 		func(c *gin.Context) {
-			pk := c.Params.ByName(commonReq.GetPrimaryKey())
+			id, e1 := uuid.Parse(c.Params.ByName(commonReq.GetPrimaryKey()))
+			if e1 != nil {
+				c.JSON(http.StatusNotFound, gin.H{})
+				return
+			}
 
-			item, err := commonReq.Delete(pk)
+			item, err := commonReq.Delete(id)
 
 			if err != nil {
 				c.JSON(http.StatusNotFound, gin.H{})

@@ -34,7 +34,7 @@ func SetupRouter(dataSourceName string) *gin.Engine {
 	storyRouter := story.CommonRequests{
 		CommonRequests: request.CommonRequests{
 			Name:           "story",
-			PrimaryKey:     "story_id",
+			PrimaryKey:     "id",
 			DatasourceName: dataSourceName,
 		},
 	}
@@ -44,7 +44,7 @@ func SetupRouter(dataSourceName string) *gin.Engine {
 	userRouter := appUser.CommonRequests{
 		CommonRequests: request.CommonRequests{
 			Name:           "appUser",
-			PrimaryKey:     "user_id",
+			PrimaryKey:     "id",
 			DatasourceName: dataSourceName,
 		},
 	}

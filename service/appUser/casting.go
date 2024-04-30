@@ -4,6 +4,7 @@ import (
 	"example/request"
 	"fmt"
 	"github.com/doug-martin/goqu/v9/exp"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -40,7 +41,7 @@ func (c CommonRequests) Select(options ...exp.Expression) (any, error) {
 	return result, nil
 }
 
-func (c CommonRequests) GetOne(userId any) (any, error) {
+func (c CommonRequests) GetOne(userId uuid.UUID) (any, error) {
 
 	var result User
 

@@ -5,6 +5,7 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"log"
 	"strings"
@@ -12,6 +13,10 @@ import (
 
 func removeDoubleQuote(str string) string {
 	return strings.ReplaceAll(str, "\"", "")
+}
+
+func whereUuid(id uuid.UUID) string {
+	return fmt.Sprintf("WHERE id=UUID_TO_BIN('%s')", id)
 }
 
 type Mysql struct {
@@ -66,6 +71,8 @@ func (mysql Mysql) Select(options ...exp.Expression) (*sqlx.Rows, error) {
 		options...,
 	).ToSQL()
 
+	println(strings.ReplaceAll(sql, "\"", ""))
+
 	rows, err2 := db.Queryx(strings.ReplaceAll(sql, "\"", ""))
 
 	println("%+v", rows)
@@ -94,7 +101,7 @@ func (mysql Mysql) GetAll() (*sqlx.Rows, error) {
 	return rows, nil
 }
 
-func (mysql Mysql) GetOne(id any) (*sqlx.Rows, error) {
+func (mysql Mysql) GetOne(id uuid.UUID) (*sqlx.Rows, error) {
 
 	db, err := sqlx.Open("mysql", mysql.DatasourceName)
 
@@ -102,7 +109,7 @@ func (mysql Mysql) GetOne(id any) (*sqlx.Rows, error) {
 		log.Fatalln(err)
 	}
 
-	rows, err2 := db.Queryx(fmt.Sprintf("SELECT * FROM %s WHERE %s = %s", mysql.Name, mysql.PrimaryKey, id))
+	rows, err2 := db.Queryx(fmt.Sprintf("SELECT * FROM %s %s", mysql.Name, whereUuid(id)))
 
 	if err2 != nil {
 		return nil, err2
@@ -121,25 +128,19 @@ func (mysql Mysql) Insert(item interface{}) (bool, error) {
 
 }
 
-func (mysql Mysql) Update(item interface{}, id any) (bool, error) {
+func (mysql Mysql) Update(item interface{}, id uuid.UUID) (bool, error) {
 
 	query, _, _ := goqu.Update(mysql.Name).
-		Set(item).
-		Where(goqu.Ex{
-			mysql.PrimaryKey: id,
-		}).ToSQL()
+		Set(item).ToSQL()
 
-	return mysql.Tx(removeDoubleQuote(query))
+	return mysql.Tx(removeDoubleQuote(fmt.Sprintf("%s %s", query, whereUuid(id))))
 
 }
 
-func (mysql Mysql) Delete(id any) (bool, error) {
+func (mysql Mysql) Delete(id uuid.UUID) (bool, error) {
 
-	query, _, _ := goqu.Delete(mysql.Name).
-		Where(goqu.Ex{
-			mysql.PrimaryKey: id,
-		}).ToSQL()
+	query, _, _ := goqu.Delete(mysql.Name).ToSQL()
 
-	return mysql.Tx(removeDoubleQuote(query))
+	return mysql.Tx(removeDoubleQuote(fmt.Sprintf("%s %s", query, whereUuid(id))))
 
 }
