@@ -1,6 +1,7 @@
 package main
 
 import (
+	"example/mysql"
 	"example/router"
 	_ "example/service"
 	"fmt"
@@ -18,13 +19,17 @@ func main() {
 	}
 
 	dataSourceName := fmt.Sprintf(
-		"%s:%s@tcp(%s:3306)/%s",
+		"%s:%s@tcp(%s:3306)/",
 		os.Getenv("DB_USERNAME"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("SERVER_DOMAIN"),
-		os.Getenv("DB_NAME"),
 	)
 
-	r := router.SetupRouter(dataSourceName)
+	_, err = mysql.InitDB(dataSourceName, os.Getenv("DB_NAME"))
+	if err != nil {
+		return
+	}
+
+	r := router.SetupRouter(dataSourceName + os.Getenv("DB_NAME"))
 	r.Run(":" + os.Getenv("PORT"))
 }

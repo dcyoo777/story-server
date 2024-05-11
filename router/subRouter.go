@@ -18,6 +18,7 @@ func UseSubRouter(r *gin.Engine, commonReq request.CommonRequestInterface, parse
 			items, err := commonReq.Select(parseSelectQuery(c)...)
 
 			fmt.Printf("ITEMS : %+v\n", items)
+			fmt.Printf("ERROR : %+v\n", err)
 			if err != nil {
 				c.JSON(http.StatusNotFound, gin.H{})
 			} else {

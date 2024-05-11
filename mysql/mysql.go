@@ -25,6 +25,55 @@ type Mysql struct {
 	DatasourceName string
 }
 
+func InitDB(datasourceName string, dbName string) (*sqlx.DB, error) {
+	db, err := sqlx.Open("mysql", datasourceName)
+	defer func(db *sqlx.DB) {
+		_ = db.Close()
+	}(db)
+
+	if err != nil {
+		fmt.Println(":: Fail to connect DB ::\n", err)
+		return nil, err
+	}
+
+	_, err = db.Exec(`CREATE DATABASE IF NOT EXISTS ` + dbName)
+	if err != nil {
+		panic(err)
+	}
+	err = db.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	db, err = sqlx.Open("mysql", datasourceName+dbName)
+	defer func(db *sqlx.DB) {
+		_ = db.Close()
+	}(db)
+
+	return db, nil
+}
+
+func (mysql Mysql) Init() (bool, error) {
+	db, err := sqlx.Open("mysql", mysql.DatasourceName)
+	defer func(db *sqlx.DB) {
+		if db.Close() != nil {
+			return
+		}
+	}(db)
+
+	if err != nil {
+		fmt.Println(":: Fail to connect DB ::\n", err)
+		return false, err
+	}
+
+	_, err = db.Exec(`CREATE DATABASE IF NOT EXISTS ` + mysql.Name)
+	if err != nil {
+		panic(err)
+	}
+
+	return true, nil
+}
+
 func (mysql Mysql) Tx(query string) (bool, error) {
 	db, err := sqlx.Open("mysql", mysql.DatasourceName)
 
@@ -32,6 +81,11 @@ func (mysql Mysql) Tx(query string) (bool, error) {
 		fmt.Println(":: Fail to connect DB ::\n", err)
 		return false, err
 	}
+	defer func(db *sqlx.DB) {
+		if db.Close() != nil {
+			return
+		}
+	}(db)
 
 	tx, err2 := db.Begin()
 
@@ -66,6 +120,11 @@ func (mysql Mysql) Select(options ...exp.Expression) (*sqlx.Rows, error) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	defer func(db *sqlx.DB) {
+		if db.Close() != nil {
+			return
+		}
+	}(db)
 
 	sql, _, _ := goqu.From(mysql.Name).Where(
 		options...,
@@ -91,6 +150,11 @@ func (mysql Mysql) GetAll() (*sqlx.Rows, error) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	defer func(db *sqlx.DB) {
+		if db.Close() != nil {
+			return
+		}
+	}(db)
 
 	rows, err2 := db.Queryx(fmt.Sprintf("SELECT * FROM %s", mysql.Name))
 
@@ -108,6 +172,11 @@ func (mysql Mysql) GetOne(id uuid.UUID) (*sqlx.Rows, error) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	defer func(db *sqlx.DB) {
+		if db.Close() != nil {
+			return
+		}
+	}(db)
 
 	rows, err2 := db.Queryx(fmt.Sprintf("SELECT * FROM %s %s", mysql.Name, whereUuid(id)))
 

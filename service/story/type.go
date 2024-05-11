@@ -11,14 +11,15 @@ type ToDB struct {
 }
 
 type Story struct {
-	Id        uuid.UUID
-	Title     string
-	Content   string
-	Place     string
-	Start     string
-	End       string
-	CreatedAt string `db:"created_at"`
-	UpdatedAt string `db:"updated_at"`
+	Id             uuid.UUID
+	Title          string
+	Content        string
+	Place          string
+	Start          string
+	End            string
+	OwnerAppUserId uuid.UUID `db:"owner_app_user_id"`
+	CreatedAt      string    `db:"created_at"`
+	UpdatedAt      string    `db:"updated_at"`
 }
 
 func (story Story) ToDB() ToDB {
